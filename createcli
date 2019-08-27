@@ -1,0 +1,33 @@
+#!/bin/bash
+ set -x
+ DOMAIN_NAME=hong-es
+
+ echo "Get exteranl ip address" 
+ ip=$(curl -Lk http://ipv4bot.whatismyipaddress.com/)
+ echo $ip
+
+ echo 'Create es based on info above'
+ #aws es delete-elasticsearch-domain --domain-name ${DOMAIN_NAME}
+
+ aws es create-elasticsearch-domain --domain-name ${DOMAIN_NAME} \
+   --elasticsearch-version 7.1 \
+   --elasticsearch-cluster-config  InstanceType=r5.large.elasticsearch,InstanceCount=3,\
+DedicatedMasterEnabled=true,DedicatedMasterType=r5.large.elasticsearch,DedicatedMasterCount=3 \
+   --ebs-options EBSEnabled=true,VolumeType=gp2,VolumeSize=10 \
+   --access-policies '{"Version": "2012-10-17","Statement": [{"Effect": "Allow", "Principal": {"AWS": "*"}, "Action": "es:*","Resource": "arn:aws:es:us-west-2:1864543866x:domain/'${DOMAIN_NAME}'/*","Condition": {"IpAddress": {"aws:SourceIp": "'${ip}'"}}}]}'
+ 
+fi
+ echo "Check status of domain"
+ aws es describe-elasticsearch-domain --domain-name hong-es |grep UpdateStatu|cut -d':' -f2|sed 's/[, ]//g'
+ 
+ sleep 400
+ eche 'Verification es and kibana ... '
+ endpoint=$(aws es describe-elasticsearch-domain --domain-name mygooddomain|grep Endpoint|cut -d':' -f2|sed 's/[ ,]//g')
+ result=$(curl -XGET $endpoint|grep 'You Know, for Search')
+ #curl -XGET $endpoint/_plugin/kibana/
+ #curl -XPUT $endpoint/_bulk?pretty --data-binary @movies.json
+
+ if [[ '' != $result ]]; 
+ then echo "TEST PASS!"
+ else echo "TEST ERROR!"
+ fi

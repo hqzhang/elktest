@@ -16,7 +16,6 @@ DedicatedMasterEnabled=true,DedicatedMasterType=r5.large.elasticsearch,Dedicated
    --ebs-options EBSEnabled=true,VolumeType=gp2,VolumeSize=10 \
    --access-policies '{"Version": "2012-10-17","Statement": [{"Effect": "Allow", "Principal": {"AWS": "*"}, "Action": "es:*","Resource": "arn:aws:es:us-west-2:1864543866x:domain/'${DOMAIN_NAME}'/*","Condition": {"IpAddress": {"aws:SourceIp": "'${ip}'"}}}]}'
  
-fi
  echo "Check status of domain"
  aws es describe-elasticsearch-domain --domain-name hong-es |grep UpdateStatu|cut -d':' -f2|sed 's/[, ]//g'
  
